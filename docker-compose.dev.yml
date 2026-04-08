@@ -1,0 +1,65 @@
+version: '3.9'
+
+# Run with: docker compose -f docker-compose.dev.yml up --build
+
+services:
+
+  mongo:
+    image: mongo:7-jammy
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data_dev:/data/db
+    networks:
+      - app-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "5000:5000"
+    environment:
+      PORT:      5000
+      NODE_ENV:  development
+      MONGO_URI: mongodb://mongo:27017/taskapp
+      JWT_SECRET: dev_secret_change_in_prod
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - app-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: builder        # stop at build stage for dev
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://backend:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - app-net
+
+volumes:
+  mongo_data_dev:
+
+networks:
+  app-net:
+    driver: bridge

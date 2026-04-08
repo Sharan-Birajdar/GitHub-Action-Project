@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7-jammy
+    container_name: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: taskapp
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ── Backend (Node/Express) ─────────────────────────────────────────────────
+  backend:
+    image: ${DOCKERHUB_USERNAME}/taskapp-backend:latest
+    container_name: backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      PORT:          5000
+      NODE_ENV:      production
+      MONGO_URI:     mongodb://mongo:27017/taskapp
+      JWT_SECRET:    ${JWT_SECRET}
+      FRONTEND_URL:  http://localhost
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── Frontend (React + nginx) ───────────────────────────────────────────────
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/taskapp-frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mongo_data:
+
+networks:
+  app-net:
+    driver: bridge
