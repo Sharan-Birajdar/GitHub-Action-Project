@@ -26,11 +26,11 @@ jobs:
 
       - name: Install & test backend
         working-directory: backend
-        run: npm ci && npm test
+        run: npm install && npm test
 
       - name: Install & test frontend
         working-directory: frontend
-        run: npm ci && npm test
+        run: npm install && npm test
 
   # ── 2. Build & Push Docker images ─────────────────────────────────────────
   build-and-push:
