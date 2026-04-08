@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 env:
-  BACKEND_IMAGE:  ${{ secrets.DOCKERHUB_USERNAME }}:taskapp-backend
-  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}:taskapp-frontend
+  BACKEND_IMAGE:  ${{ secrets.DOCKERHUB_USERNAME }}/taskapp-backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/taskapp-frontend
 
 jobs:
 
