@@ -120,4 +120,4 @@ jobs:
             docker image prune -f
 
             echo "Deployment complete!"
-            docker compose ps
+            docker ps
